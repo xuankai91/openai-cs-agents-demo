@@ -2,3 +2,6 @@ openai-agents
 pydantic
 fastapi
 uvicorn
+pymilvus
+beautifulsoup4
+html2text
