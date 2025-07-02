@@ -6,6 +6,7 @@ from typing import List
 import string
 import json
 import os
+import sqlite3
 
 from agents import (
     Agent,
@@ -21,9 +22,10 @@ from agents.extensions.handoff_prompt import RECOMMENDED_PROMPT_PREFIX
 
 
 # =========================
-# Setup for RAG
+# Setup
 # =========================
 
+# RAG
 from dotenv import load_dotenv
 load_dotenv()
 assert 'OPENAI_API_KEY' in os.environ, "ERROR: set up your OPENAI_API_KEY"
@@ -31,6 +33,9 @@ from openai import OpenAI
 openai_client = OpenAI(api_key = os.environ.get("OPENAI_API_KEY"))
 from pymilvus import MilvusClient
 milvus_client = MilvusClient("milvus.db")
+
+# records
+CONN = sqlite3.connect('roaming_plans.db')
 
 # =========================
 # MODEL(S)
@@ -76,26 +81,22 @@ async def get_customer_information_tool(
     context.context.customer_name = customer_name
     context.context.phone_number = phone_number
 
+    ## find previous record
+    cursor = CONN.cursor()
+    cmd = f"SELECT roaming_plan FROM plans where customer_name=='{customer_name}' and phone_number=='{phone_number}'"
+    cursor.execute(cmd)
+    retplans = cursor.fetchall()
+    if len(retplans) > 0:
+        # if record exists
+        context.context.roaming_plan = retplans[-1][0] # get the last plan that was purchased (assume no expiry)
+    else:
+        # if not exists, create new record
+        cmd = f"INSERT INTO plans (customer_name, phone_number, roaming_plan) \
+            VALUES ('{customer_name}', '{phone_number}', '{context.context.roaming_plan}')"
+        cursor.execute(cmd)
+        CONN.commit()
+    # CONN.close()
 
-# @function_tool
-# async def get_customer_name(
-#     context: RunContextWrapper[TelcoAgentContext],
-#     customer_name:str
-# ):
-#     """
-#     Tool to update customer's name.
-#     """
-#     context.context.customer_name = customer_name
-
-# @function_tool
-# async def get_phone_number(
-#     context: RunContextWrapper[TelcoAgentContext],
-#     phone_number:str
-# ):
-#     """
-#     Tool to update customer's phone number.
-#     """
-#     context.context.phone_number = phone_number
     
 @function_tool
 async def roaming_plans_lookup_tool(destinations: List[str]) -> str:
@@ -160,6 +161,15 @@ async def purchase_roaming_tool(
     assert new_roaming_plan.lower() in ['neighbours','asia','worldwide','others'], "roaming plan must be one of: `Neighbours`, `Asia`, `Worldwide`,`Others` "
     
     context.context.roaming_plan = new_roaming_plan
+
+    ## update db
+    cursor = CONN.cursor()
+    cmd = f"INSERT INTO plans (customer_name, phone_number, roaming_plan) \
+    VALUES ('{context.context.customer_name}', '{context.context.phone_number}', '{new_roaming_plan}')"
+    cursor.execute(cmd)
+    CONN.commit()
+    # CONN.close()
+    
     return f"Updated roaming plan to {new_roaming_plan} for {context.context.phone_number}"
 
 
@@ -170,6 +180,16 @@ async def roaming_cancellation_tool(
     """Remove roaming plan for an associated phone number."""
     assert context.context.roaming_plan is not None, "no roaming plan existing"
     context.context.roaming_plan = None
+
+    
+    ## update db
+    cursor = CONN.cursor()
+    cmd = f"INSERT INTO plans (customer_name, phone_number, roaming_plan) \
+    VALUES ('{context.context.customer_name}', '{context.context.phone_number}', '{None}')"
+    cursor.execute(cmd)
+    CONN.commit()
+    # CONN.close()
+    
     return f"Removed roaming plan for {context.context.phone_number}"
 
 # # =========================
@@ -292,7 +312,7 @@ def purchase_agent_instructions(
         f"1. The customer's phone number is {phone_number} and current plan is {current_plan}.\n"
         "   Confirm with the customer that both pieces of information are correct.\n"
         "2. When confirmed, ask the customer which new roaming plan they would like to purchase. Do not recommend any plans.\n"
-        "3. Use the purchase_roaming_tool to update their phone number with the new plan.\n"
+        "3. Use the purchase_roaming_tool to update their phone number with the new plan. The plan should be either 'Neighbours','Asia','Worldwide', or 'Others'. \n"
         "4. Once completed, always transfer back to the customer service agent"
         "If the customer asks a question that is not related to a purchase, transfer back to the customer service agent."
     )
