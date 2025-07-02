@@ -6,7 +6,7 @@ from uuid import uuid4
 import time
 import logging
 
-from .main2 import (
+from main2 import (
     customer_service_agent,
     purchase_agent,
     cancellation_agent,

@@ -1,10 +1,11 @@
 from __future__ import annotations as _annotations
 
-import random
+#import random
 from pydantic import BaseModel
 from typing import List
 import string
 import json
+import os
 
 from agents import (
     Agent,
@@ -18,12 +19,26 @@ from agents import (
 )
 from agents.extensions.handoff_prompt import RECOMMENDED_PROMPT_PREFIX
 
+
+# =========================
+# Setup for RAG
+# =========================
+
+from dotenv import load_dotenv
+load_dotenv()
+assert 'OPENAI_API_KEY' in os.environ, "ERROR: set up your OPENAI_API_KEY"
+from openai import OpenAI
+openai_client = OpenAI(api_key = os.environ.get("OPENAI_API_KEY"))
+from pymilvus import MilvusClient
+milvus_client = MilvusClient("milvus.db")
+
 # =========================
 # MODEL(S)
 # =========================
 
-MODEL = "gpt-4.1-nano"
+MODEL = "gpt-4.1-mini"
 GRMODEL = "gpt-4.1-nano"
+EMBEDMODEL = "text-embedding-3-small"
 
 # =========================
 # CONTEXT
@@ -42,13 +57,46 @@ def create_initial_context() -> TelcoAgentContext:
     In production, this should be set from real user data.
     """
     ctx = TelcoAgentContext()
-    ctx.phone_number = '7' + str(random.randint(1000000, 9999999))
+    #ctx.phone_number = '7' + str(random.randint(1000000, 9999999))
     return ctx
 
 # =========================
 # TOOLS
 # =========================
 
+@function_tool
+async def get_customer_information_tool(
+    context: RunContextWrapper[TelcoAgentContext],
+    customer_name:str,
+    phone_number:str
+):
+    """
+    Tool to update customer's name and phone number. Should only be used once.
+    """
+    context.context.customer_name = customer_name
+    context.context.phone_number = phone_number
+
+
+# @function_tool
+# async def get_customer_name(
+#     context: RunContextWrapper[TelcoAgentContext],
+#     customer_name:str
+# ):
+#     """
+#     Tool to update customer's name.
+#     """
+#     context.context.customer_name = customer_name
+
+# @function_tool
+# async def get_phone_number(
+#     context: RunContextWrapper[TelcoAgentContext],
+#     phone_number:str
+# ):
+#     """
+#     Tool to update customer's phone number.
+#     """
+#     context.context.phone_number = phone_number
+    
 @function_tool
 async def roaming_plans_lookup_tool(destinations: List[str]) -> str:
     """
@@ -58,7 +106,7 @@ async def roaming_plans_lookup_tool(destinations: List[str]) -> str:
     q = set([d.lower() for d in destinations])
 
     # load roaming locations
-    with open('./openai-cs-agents-demo/python-backend/roaming_locations.json','r') as f:
+    with open('roaming_locations.json','r') as f:
         roaming = json.load(f)
 
     # set roaming rank (to find most appropriate roaming coverage)
@@ -84,11 +132,28 @@ async def roaming_plans_lookup_tool(destinations: List[str]) -> str:
 @function_tool
 async def roaming_faq_lookup_tool(question: str) -> str:
     """Lookup FAQs for roaming."""
-    return "ROAMING FAQS"
+    print('<performing RAG>')
+    print('encoding query...')
+    encode_doc = lambda doc : openai_client.embeddings.create(model=EMBEDMODEL,input=doc,encoding_format="float").data[0].embedding
+    
+    # perform vector search
+    print('retrieving answers...')
+    search_res = milvus_client.search(
+                    collection_name='faq',
+                    data=[
+                        encode_doc(question)
+                    ],  
+                    limit=1,  # Return top result
+                    search_params={"metric_type": "COSINE", "params": {}},  # Cosine distance
+                    output_fields=["id","question","answer"],  # Return the text field
+                )
+    
+    return search_res[0][0]["entity"]['answer'] #"ROAMING FAQS"
 
 @function_tool
 async def purchase_roaming_tool(
-    context: RunContextWrapper[TelcoAgentContext], new_roaming_plan: str
+    context: RunContextWrapper[TelcoAgentContext], 
+    new_roaming_plan: str
 ) -> str:
     """Update new roaming plan for an associated phone number."""
     assert new_roaming_plan is not None, "roaming plan required"
@@ -103,7 +168,7 @@ async def roaming_cancellation_tool(
     context: RunContextWrapper[TelcoAgentContext]
 ) -> str:
     """Remove roaming plan for an associated phone number."""
-    assert new_roaming_plan is not None, "no roaming plan existing"
+    assert context.context.roaming_plan is not None, "no roaming plan existing"
     context.context.roaming_plan = None
     return f"Removed roaming plan for {context.context.phone_number}"
 
@@ -193,20 +258,21 @@ def roaming_agent_instructions(
     phone_number = ctx.phone_number or "[unknown]" # use [unknown] as a check to see if context is working
     return (
         f"{RECOMMENDED_PROMPT_PREFIX}\n"
-        "You are an agent that can answer questions regarding SingTel's ReadyRoam roaming plans. "
+        "You are a roaming plans agent that can recommend and/or answer questions regarding SingTel's ReadyRoam roaming plans. "
         #"If you are speaking to a customer, you probably were transferred to from the customer service agent.\n"
         "Use the following routine to support the customer.\n"
         f"1. The customer's phone number is {phone_number}."+
         "If this is not available, ask the customer for their phone  number. If you have it, confirm that is the phone number they are referencing.\n"
-        "2. Identify a list of destinations they want to travel to. Use the roaming_plans_lookup_tool to suggest the appropriate roaming plan that suits the customer's destinations.\n"
-        "3. Answer any FAQs the customer has using the roaming_faq_lookup_tool. Do not rely on your own knowledge.\n"
+        "2. Determine if the customer requires a recommendation for a roaming plan, or has questions about roaming plans"
+        "3. If they require a recommendation, identify a list of destinations they want to travel to. Use the roaming_plans_lookup_tool to suggest the appropriate roaming plan that suits the customer's destinations.\n"
+        "4. If they have questions, answer them using the roaming_faq_lookup_tool. Do not rely on your own knowledge.\n"
         "If the customer asks a question that is not related to the routine, transfer back to the customer service agent."
     )
 
 roaming_agent = Agent[TelcoAgentContext](
-    name="Roaming Recommendation Agent",
+    name="Roaming Agent",
     model=MODEL,
-    handoff_description="A helpful agent that can recommend and answer questions related to roaming plans.",
+    handoff_description="A helpful agent that can recommend roaming plans, as well as answer questions related to roaming plans.",
     instructions=roaming_agent_instructions,
     tools=[roaming_plans_lookup_tool, roaming_faq_lookup_tool],
     input_guardrails=[relevance_guardrail, jailbreak_guardrail],
@@ -222,15 +288,17 @@ def purchase_agent_instructions(
 
     return (
         f"{RECOMMENDED_PROMPT_PREFIX}\n"
-        "You are a Roaming Purchase Agent. Use the following routine to support the customer:\n"
+        "You are a Purchase Agent. Use the following routine to support the customer:\n"
         f"1. The customer's phone number is {phone_number} and current plan is {current_plan}.\n"
-        "   Ask the customer which new roaming plan they would like to purchase.\n"
-        "2. Use the purchase_roaming_tool to update their phone number with the new plan.\n"
+        "   Confirm with the customer that both pieces of information are correct.\n"
+        "2. When confirmed, ask the customer which new roaming plan they would like to purchase. Do not recommend any plans.\n"
+        "3. Use the purchase_roaming_tool to update their phone number with the new plan.\n"
+        "4. Once completed, always transfer back to the customer service agent"
         "If the customer asks a question that is not related to a purchase, transfer back to the customer service agent."
     )
 
 purchase_agent = Agent[TelcoAgentContext](
-    name="Roaming Purchase Agent",
+    name="Purchase Agent",
     model=MODEL,
     handoff_description="An agent to update roaming plan for an associated phone number",
     instructions=purchase_agent_instructions,
@@ -253,6 +321,7 @@ def cancellation_agent_instructions(
         f"1. The customer's phone number is {phone_number} and current plan is {current_plan}.\n"
         "   Confirm with the customer that both pieces of information are correct.\n"
         "2. If the customer confirms, use the roaming_cancellation_tool to remove the roaming plan associated with their phone number.\n"
+        "3. Once completed, always transfer back to the customer service agent"
         "If the customer asks anything else, or if they do not wish to cancel, transfer back to the customer service agent."
     )
 
@@ -273,10 +342,18 @@ customer_service_agent = Agent[TelcoAgentContext](
     instructions=(
         f"{RECOMMENDED_PROMPT_PREFIX} "
         "You are a helpful customer service agent. You can use your tools to delegate questions to other appropriate agents."
+        "Always start by checking that the customer has provided their name and phone number. Use the tools to update their profile."
+        "Only prompt them to provide the information if it is not available. "
+        "If a customer needs recommendations for a roaming plan, or has questions about roaming plans, direct them to the roaming agent"
+        "Do not use your own knowledge to answer any questions about roaming plans"
+        "If a customer wishes to purchase a roaming plan, redirect them to the purchase agent"
+        "If a customer wishes to cancel a roaming plan, redirect them to the cancellation agent"
     ),
+    #tools=[get_customer_name,get_phone_number],
+    tools=[get_customer_information_tool],
     handoffs=[
         roaming_agent,
-        purchase_agent,
+        purchase_agent, # cannot handoff immediately
         cancellation_agent,
         #handoff(agent=cancellation_agent, on_handoff=on_cancellation_handoff),
     ],

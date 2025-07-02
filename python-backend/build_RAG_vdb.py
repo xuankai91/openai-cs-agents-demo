@@ -2,14 +2,16 @@ from openai import OpenAI
 import os
 import json
 
-assert 'OPENAI_API_KEY' in os.environ; "ERROR: set up your OPENAI_API_KEY"
+from dotenv import load_dotenv
+load_dotenv()
+assert 'OPENAI_API_KEY' in os.environ, "ERROR: set up your OPENAI_API_KEY"
 
 ## settings
 EMBED = "text-embedding-3-small"
 EMBEDDIM = 1536 # based on the embedding model. see https://milvus.io/docs/openai.md
 
 # create embedding function
-openai_client = OpenAI()
+openai_client = OpenAI(api_key = os.environ.get("OPENAI_API_KEY"))
 def encode_doc(doc: str) -> list:
     return openai_client.embeddings.create(model=EMBED,input=doc,encoding_format="float").data[0].embedding
 

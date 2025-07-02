@@ -5,3 +5,4 @@ uvicorn
 pymilvus
 beautifulsoup4
 html2text
+python-dotenv
