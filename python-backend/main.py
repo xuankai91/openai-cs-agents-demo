@@ -106,6 +106,10 @@ async def roaming_plans_lookup_tool(destinations: List[str]) -> str:
     #q = set([q.strip() for q in question.lower().split(',')]) # assume input string is only of locations, split by commas
     q = set([d.lower() for d in destinations])
 
+    ## check if Singapore (local) is part of the destinations - throw exception
+    for loc in q:
+        assert loc != 'singapore', "Roaming is not applicable for local Singapore usage."
+
     # load roaming locations
     with open('roaming_locations.json','r') as f:
         roaming = json.load(f)
