@@ -17,7 +17,7 @@ def encode_doc(doc: str) -> list:
 
 # create vectorDB (use in-memory vdb for now)
 from pymilvus import MilvusClient
-milvus_client = MilvusClient("./milvus.db")
+milvus_client = MilvusClient("../milvus.db")
 
 collection_name = "faq"
 # if milvus_client.has_collection(collection_name=collection_name):
