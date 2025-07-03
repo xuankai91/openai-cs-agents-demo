@@ -79,8 +79,8 @@ if __name__ == "__main__":
     # conn.commit()
     # print("\nInserted example data.")
     #
-    # cursor.execute("SELECT * FROM roaming_plans")
-    # print("Current data in roaming_plans:")
+    # cursor.execute("SELECT * FROM plans")
+    # print("Current data in plans:")
     # for row in cursor.fetchall():
     #     print(row)
     # conn.close()
