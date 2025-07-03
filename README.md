@@ -34,7 +34,7 @@ Alternatively, you can modify the `compose.yaml` file and manually set the `OPEN
 This demo requires Docker to be installed.
 
 ### Run the app
-1. clone the repo to your own local directory. [Instructions here.](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository)
+1. [clone](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) the repo to your own local directory (or [download](https://docs.github.com/en/get-started/start-your-journey/downloading-files-from-github#downloading-a-repositorys-files) & unzip).
 2. in your local directory, run the docker compose file `docker compose up --build`
 3. when app is ready, go to `http://localhost:3000` 
 
@@ -55,6 +55,7 @@ This demo requires Docker to be installed.
    - User: "I am travelling to Australia and New Zealand. Which roaming plan would be suitable?"
    - Roaming agent will use a lookup tool to match the most appropriate roaming plan (Neighbours, Asia, Worldwide, or Others).
    - Roaming Agent: "For your trip to Australia and New Zealand, the ReadyRoam Asia plan would be suitable. If you would like, I can provide more details about this plan or help you with the purchase."
+   - Verification: [ReadyRoam Asia plan coverage](https://www.singtel.com/personal/products-services/mobile/roaming/all-plans/18-destinations)
 
 4. **Purchasing:**
    - User: "Sure, please help me purchase the ReadyRoam Asia plan"
@@ -67,9 +68,10 @@ This demo requires Docker to be installed.
    - CS Agent: "The ReadyRoam Asia roaming plan has been successfully purchased for your phone number 12345678. If you have any other questions or need further assistance, feel free to ask!"
 
 6. **Curiosity/FAQ:**
-   - User: "How can I check the amount of roaming data I have used?" [(see FAQ "How can I check my data usage consumption?")](https://www.singtel.com/personal/products-services/mobile/roaming/faqs#9)
-   - CS Agent will handoff to Roaming Agent, to use a RAG tool to answer FAQs.
+   - User: "How can I check the amount of roaming data I have used?" 
+   - CS Agent will handoff back to Roaming Agent, to use a RAG tool to answer FAQs.
    - Roaming Agent: "You can check the amount of roaming data you have used by using the My Singtel app. On the home screen, simply toggle to ‘Roam’ under your mobile number to view your roaming data usage and charges. If you need help with anything else, just let me know!"
+   - Verification: [from FAQ: "How can I check my data usage consumption?"](https://www.singtel.com/personal/products-services/mobile/roaming/faqs#9)
 
 This flow demonstrates how the system intelligently routes your requests to the right specialist agent, demonstrating tool usage & RAG, while managing the context to account for changes in state (e.g. roaming plan purchase).
 
