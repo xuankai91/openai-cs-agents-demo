@@ -1,0 +1,5 @@
+# Set the default behavior for all text files to auto-detect and normalize
+* text=auto
+
+# Explicitly declare shell scripts to always use LF line endings
+*.sh text eol=lf
