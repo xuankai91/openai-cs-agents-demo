@@ -40,14 +40,14 @@ This demo requires Docker to be installed.
 
 ## Demo Flows
 
-### Demo flow #1
+### Demo flow #1 - Purchasing New Roaming Plan
 
 1. **Start with a roaming plan purchase:**
    - User: "I would like to buy a roaming plan. What roaming plans do you have?"
    - The Customer Service (CS) Agent should recognize your intent and prompt you to provide your name & mobile number.
 
 2. **After providing your information:**
-   - User: "My name is MyName and my phone number is 12345678."
+   - User: "My name is John Smith and my phone number is 91111111."
    - CS Agent will be update with your information, and hand you off to Roaming Agent.
    - Roaming Agent: "Thank you, MyName. To recommend the most suitable roaming plan for you, may I know which countries or destinations you are planning to travel to? This will help me suggest the best roaming plan options for your trip."
 
@@ -75,11 +75,28 @@ This demo requires Docker to be installed.
 
 This flow demonstrates how the system intelligently routes your requests to the right specialist agent, demonstrating tool usage & RAG, while managing the context to account for changes in state (e.g. roaming plan purchase).
 
-### Demo flow #2
-TBD
+### Demo flow #2 - Cancelling existing plan
+1. **Start with checking for existing roaming plans, in a new session:**
+   - User: "Hi, I would like to check on my roaming plan"
+   - The CS Agent should prompt you to provide your name & mobile number.
+   - CS Agent: "Sure! Before I help you with checking your roaming plan, may I have your name and phone number, please?"
+     
+2. **Provide info and retrieve existing plan:**
+   - User: "John Smith, 91111111"
+   - CS agent retrieves info, hands off to Roaming Agent. Context will be updated to previously purchased plan
+     
+3. **I would like to cancel my roaming plan:**
+   - User: "Hi, I would like to check on my roaming plan"
+   - Cancellation Agent will confirm your details & plan.
+   - Cancellation Agent: "I have your phone number as 91111111 and your current roaming plan as Asia. Is that information correct for the cancellation of your roaming plan?"
+     
+4. **Affirm cancellation:**
+   - User: "That is correct"
+   - Cancellation Agent uses cancellation tool to remove plan. Context will be updated to no plan.
+   - Cancellation Agent: "Your roaming plan has been successfully canceled. Is there anything else I can assist you with today?"
 
 ## known issues:
-1. Node.js may run into installation & runtime issues. Easiest  
+1. Node.js may run into installation & runtime issues. Easiest rectification is to redownload the image & reinstall.
 
 ## License
 

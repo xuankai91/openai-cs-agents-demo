@@ -18,7 +18,7 @@ fi
 
 # setup necessary stuff
 pip install -r /python-backend/requirements.txt # install requirements
-python3 /python-backend/utils/build_plans_db.py # recreate clean plans.db
+python3 /python-backend/utils/build_plans_db.py # recreate clean plans.db; take note of relative pathing
 
 # run ui
 npm --prefix /ui install
