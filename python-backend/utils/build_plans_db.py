@@ -1,5 +1,6 @@
 import sqlite3
 import os
+import sys
 
 # generated using gemini
 
@@ -59,7 +60,10 @@ def build_roaming_plans_db(db_name="roaming_plans.db"):
 # --- How to use the script ---
 if __name__ == "__main__":
     # Define the database file name
-    database_file = os.getcwd() + "/python-backend/roaming_plans.db"
+    try:
+        database_file = sys.argv[1]
+    except:
+        print('error: db path not provided')
 
     # Clean up previous database file for fresh start (optional, for testing)
     # if os.path.exists(database_file):

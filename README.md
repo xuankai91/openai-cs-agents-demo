@@ -45,32 +45,33 @@ This demo requires Docker to be installed.
 1. **Start with a roaming plan purchase:**
    - User: "I would like to buy a roaming plan. What roaming plans do you have?"
    - The Customer Service (CS) Agent should recognize your intent and prompt you to provide your name & mobile number.
+   - CS Agent: "To assist you with information about roaming plans and help you find the best one, I'll need to know your name and phone number first. Could you please provide those details?"
 
 2. **After providing your information:**
    - User: "My name is John Smith and my phone number is 91111111."
    - CS Agent will be update with your information, and hand you off to Roaming Agent.
-   - Roaming Agent: "Thank you, MyName. To recommend the most suitable roaming plan for you, may I know which countries or destinations you are planning to travel to? This will help me suggest the best roaming plan options for your trip."
+   - Roaming Agent: "Thank you, John. Could you please tell me the destination or destinations you plan to travel to? This will help me recommend the best roaming plan for your trip."
 
 3. **Query travel destinations:**
    - User: "I am travelling to Australia and New Zealand. Which roaming plan would be suitable?"
    - Roaming agent will use a lookup tool to match the most appropriate roaming plan (Neighbours, Asia, Worldwide, or Others).
-   - Roaming Agent: "For your trip to Australia and New Zealand, the ReadyRoam Asia plan would be suitable. If you would like, I can provide more details about this plan or help you with the purchase."
+   - Roaming Agent: "For your trip to Australia and New Zealand, the ReadyRoam Asia roaming plan would be suitable. If you need more details about this plan or want to proceed with the purchase, please let me know!"
    - Verification: [ReadyRoam Asia plan coverage](https://www.singtel.com/personal/products-services/mobile/roaming/all-plans/18-destinations)
 
 4. **Purchasing:**
    - User: "Sure, please help me purchase the ReadyRoam Asia plan"
    - Will be handed off to Purchase Agent, which requires additional confirmation.
-   - Purchase Agent: "Just to confirm, your phone number is 12345678 and you want to purchase the "Asia" roaming plan, correct?"
+   - Purchase Agent: "Before I proceed with purchasing the plan, I would like to confirm that your phone number is 91111111 and your current plan is None. Could you please confirm if this is correct?"
      
 5. **Approval**
    - User: "Yes that is correct"
    - Purchase Agent will purchase the plan (using tool) and hand off to CS agent
-   - CS Agent: "The ReadyRoam Asia roaming plan has been successfully purchased for your phone number 12345678. If you have any other questions or need further assistance, feel free to ask!"
+   - CS Agent: "The ReadyRoam Asia plan has been successfully purchased for your phone number. If you have any other questions or need further assistance, feel free to ask!"
 
 6. **Curiosity/FAQ:**
    - User: "How can I check the amount of roaming data I have used?" 
    - CS Agent will handoff back to Roaming Agent, to use a RAG tool to answer FAQs.
-   - Roaming Agent: "You can check the amount of roaming data you have used by using the My Singtel app. On the home screen, simply toggle to ‘Roam’ under your mobile number to view your roaming data usage and charges. If you need help with anything else, just let me know!"
+   - Roaming Agent: "You can check the amount of roaming data you have used by using the My Singtel app. On the homescreen of the app, simply toggle to "Roam" under your mobile number to view your roaming data usage and charges. If you need further help, feel free to ask!"
    - Verification: [from FAQ: "How can I check my data usage consumption?"](https://www.singtel.com/personal/products-services/mobile/roaming/faqs#9)
 
 This flow demonstrates how the system intelligently routes your requests to the right specialist agent, demonstrating tool usage & RAG, while managing the context to account for changes in state (e.g. roaming plan purchase).
@@ -79,24 +80,29 @@ This flow demonstrates how the system intelligently routes your requests to the 
 1. **Start with checking for existing roaming plans, in a new session:**
    - User: "Hi, I would like to check on my roaming plan"
    - The CS Agent should prompt you to provide your name & mobile number.
-   - CS Agent: "Sure! Before I help you with checking your roaming plan, may I have your name and phone number, please?"
+   - CS Agent: "Before I assist you with your roaming plan, could you please provide your name and phone number? This information is necessary to look up your account and assist you further."
      
 2. **Provide info and retrieve existing plan:**
-   - User: "John Smith, 91111111"
+   - User: "John Smith, 91111111."
    - CS agent retrieves info, hands off to Roaming Agent. Context will be updated to previously purchased plan
+   - Roaming Agent: "Thank you, John. Could you please let me know if you would like a recommendation for a roaming plan based on your travel destinations, or if you have specific questions about the roaming plans?"
      
-3. **I would like to cancel my roaming plan:**
-   - User: "Hi, I would like to check on my roaming plan"
-   - Cancellation Agent will confirm your details & plan.
-   - Cancellation Agent: "I have your phone number as 91111111 and your current roaming plan as Asia. Is that information correct for the cancellation of your roaming plan?"
+3. **Cancel my roaming plan:**
+   - User: "I would like to cancel my roaming plan"
+   - Directed to Cancellation Agent, which will confirm your details & plan.
+   - Cancellation Agent: "I understand you want to cancel your roaming plan. To confirm, is your phone number 91111111 and your current plan Asia?"
      
 4. **Affirm cancellation:**
    - User: "That is correct"
    - Cancellation Agent uses cancellation tool to remove plan. Context will be updated to no plan.
-   - Cancellation Agent: "Your roaming plan has been successfully canceled. Is there anything else I can assist you with today?"
+   - Cancellation Agent: "Your roaming plan for phone number 91111111 has been successfully canceled. If you need any further assistance, feel free to ask!"
+
+This flow demonstrates how, in a new session, the system has persistent memory of previously purchased plans by retrieving purchase records. It similarly demonstrates tool usage & updates the context/record to account for roaming plan cancellations.
 
 ## known issues:
 1. Node.js may run into installation & runtime issues. Easiest rectification is to redownload the image & reinstall.
+2. CS Agent sometimes re-triggers asking for name & phone number, then context is wiped
+3. System currently does not account for exceptions (e.g. parts of India & Thailand, Myanmar, etc.); only covered & non-covered countries.
 
 ## License
 
