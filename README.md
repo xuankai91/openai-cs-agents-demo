@@ -115,6 +115,7 @@ This flow demonstrates how, in a new session, the system has persistent memory o
 1. Node.js may run into installation & runtime issues. Easiest rectification is to redownload the image & reinstall.
 2. CS Agent sometimes re-triggers asking for name & phone number, then context is wiped
 3. System currently does not account for exceptions (e.g. parts of India & Thailand, Myanmar, etc.); only covered & non-covered countries.
+4. System is unable to provide a detailed breakdown of all roaming plans (assumption is usually customers would have destinations in mind before purchasing).
 
 ## License
 
