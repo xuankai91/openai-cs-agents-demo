@@ -31,12 +31,24 @@ Alternatively, you can modify the `compose.yaml` file and manually set the `OPEN
 
 ### Install dependencies
 
-This demo requires Docker to be installed.
+Options:
+1. self-hosting,  this demo requires Docker to be installed.
+2. on Replit; [import this github repo](https://replit.com/import/github) into your account.
 
 ### Run the app
+
+Self Hosted (Docker) option
 1. [clone](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) the repo to your own local directory (or [download](https://docs.github.com/en/get-started/start-your-journey/downloading-files-from-github#downloading-a-repositorys-files) & unzip).
 2. in your local directory, run the docker compose file `docker compose up --build`
-3. when app is ready, go to `http://localhost:3000` 
+3. when app is ready, go to `http://localhost:3000`
+
+---
+
+Replit option
+1. Start the workflow by click the green Run button.
+2. Set your OPENAI_API_KEY in the environment (see instructions above).
+3. In the console, do `./run.sh`. 
+4. A browser window will pop up. Change the Dev URL to listen to port 3000, and wait for the app to be ready.
 
 ## Demo Flows
 
