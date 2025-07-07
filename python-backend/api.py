@@ -5,6 +5,7 @@ from typing import Optional, List, Dict, Any
 from uuid import uuid4
 import time
 import logging
+import pickle
 
 from main import (
     customer_service_agent,
@@ -95,7 +96,7 @@ class InMemoryConversationStore(ConversationStore):
 
     def save(self, conversation_id: str, state: Dict[str, Any]):
         self._conversations[conversation_id] = state
-
+        
 # TODO: when deploying this app in scale, switch to your own production-ready implementation
 conversation_store = InMemoryConversationStore()
 

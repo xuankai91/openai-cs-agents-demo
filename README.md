@@ -50,6 +50,8 @@ Replit option
 3. In the console, do `./run.sh`. 
 4. A browser window will pop up. Change the Dev URL to listen to port 3000, and wait for the app to be ready.
 
+Note: start a new conversation by refreshing your browser page. Do not rerun `run.sh` as it will clear the memory store.
+
 ## Demo Flows
 
 ### Demo flow #1 - Purchasing New Roaming Plan
@@ -116,6 +118,14 @@ This flow demonstrates how, in a new session, the system has persistent memory o
 2. CS Agent sometimes re-triggers asking for name & phone number, then context is wiped
 3. System currently does not account for exceptions (e.g. parts of India & Thailand, Myanmar, etc.); only covered & non-covered countries.
 4. System is unable to provide a detailed breakdown of all roaming plans (assumption is usually customers would have destinations in mind before purchasing).
+
+## future work:
+1. Conversation log storage - to create DB that keeps track of individual users' conversational history
+2. Fine tuning goals - to SingTel specific terminologies and/or promotions
+3. Human handoff & conversation closing Agents
+4. Analytics/reporting dashboard - user metrics, retrieval accuracy, etc.
+5. Authentication & authorisation
+6. Redundancy management - decentralised DB storage
 
 ## License
 
