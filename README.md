@@ -61,6 +61,10 @@ This example contains 4 agents:
 3. Purchase Agent. Responsible for purchasing a selected roaming plan, and associating it with a mobile number. Will confirm customer details before proceeding. 
 4. Cancellation Agent. Responsible for cancelling an associated roaming plan. Will confirm customer details before proceeding.
 
+## System Architecture
+
+![SysArch](sys_diagram.jpg)
+
 ## Demo Flows
 
 ### Demo flow #1 - Purchasing New Roaming Plan
