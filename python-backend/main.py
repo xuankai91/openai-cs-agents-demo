@@ -185,7 +185,6 @@ async def roaming_cancellation_tool(
     assert context.context.roaming_plan is not None, "no roaming plan existing"
     context.context.roaming_plan = None
 
-    
     ## update db
     cursor = CONN.cursor()
     cmd = f"INSERT INTO plans (customer_name, phone_number, roaming_plan) \
@@ -196,14 +195,6 @@ async def roaming_cancellation_tool(
     
     return f"Removed roaming plan for {context.context.phone_number}"
 
-# # =========================
-# # HOOKS
-# # =========================
-
-# async def on_cancellation_handoff(context: RunContextWrapper[TelcoAgentContext]) -> None:
-#     """Remove the roaming plan when handed off to the customer service agent."""
-#     context.context.roaming_plan = None
-  
 # =========================
 # GUARDRAILS
 # =========================
@@ -298,7 +289,7 @@ roaming_agent = Agent[TelcoAgentContext](
     model=MODEL,
     handoff_description="A helpful agent that can recommend roaming plans, as well as answer questions related to roaming plans.",
     instructions=roaming_agent_instructions,
-    tools=[roaming_plans_lookup_tool, roaming_faq_lookup_tool],
+    tools=[roaming_plans_lookup_tool, roaming_faq_lookup_tool], # 2 tools for agent: 1. roaming plan lookup for recommendation, 2. RAG tools to answer FAQs about roaming plans
     input_guardrails=[relevance_guardrail, jailbreak_guardrail],
 )
 
@@ -326,7 +317,7 @@ purchase_agent = Agent[TelcoAgentContext](
     model=MODEL,
     handoff_description="An agent to update roaming plan for an associated phone number",
     instructions=purchase_agent_instructions,
-    tools=[purchase_roaming_tool],
+    tools=[purchase_roaming_tool], # purchase tool, will update the a mobile number with the latest roaming plan. current PoC only allows for one "active" plan
     input_guardrails=[relevance_guardrail, jailbreak_guardrail],
 )
 
@@ -354,7 +345,7 @@ cancellation_agent = Agent[TelcoAgentContext](
     model=MODEL,
     handoff_description="An agent to cancel a roaming plan for an associated phone number",
     instructions=cancellation_agent_instructions,
-    tools=[roaming_cancellation_tool],
+    tools=[roaming_cancellation_tool], # cancellation tool, will remove the "active" roaming plan associated with a mobile number.
     input_guardrails=[relevance_guardrail, jailbreak_guardrail],
 )
 
@@ -374,13 +365,11 @@ customer_service_agent = Agent[TelcoAgentContext](
         "If a customer wishes to purchase a roaming plan, redirect them to the purchase agent"
         "If a customer wishes to cancel a roaming plan, redirect them to the cancellation agent"
     ),
-    #tools=[get_customer_name,get_phone_number],
-    tools=[get_customer_information_tool],
+    tools=[get_customer_information_tool], # simple tool to get customer's name & mobile number.
     handoffs=[
         roaming_agent,
         purchase_agent, # cannot handoff immediately
         cancellation_agent,
-        #handoff(agent=cancellation_agent, on_handoff=on_cancellation_handoff),
     ],
     input_guardrails=[relevance_guardrail, jailbreak_guardrail],
 )
