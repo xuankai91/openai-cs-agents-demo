@@ -136,8 +136,8 @@ This flow demonstrates how, in a new session, the system has persistent memory o
 5. Authentication & authorisation service
 6. Redundancy management - decentralised DB storage for high availability
 7. Embedded UI functionality - toggle buttons for standardised user interactions as much as possible (for common tasks)
-8. Multiple roaming plan availability - current PoC only allows for 1 plan to be active at a time.
-9. Tracking of data plans & usage - new SQL database 
+8. Multiple roaming plan availability - current PoC only allows for 1 plan to be "active" at a time.
+9. DB for tracking of data plans & usage 
 
 ## License
 
