@@ -129,12 +129,12 @@ This flow demonstrates how, in a new session, the system has persistent memory o
 4. System is unable to provide a detailed breakdown of all roaming plans (assumption is usually customers would have destinations in mind before purchasing).
 
 ## future work:
-1. Conversation log storage - to create DB that keeps track of individual users' conversational history
-2. Fine tuning goals - to SingTel specific terminologies and/or promotions
-3. Human handoff & conversation closing Agents
+1. Conversation log storage - to create (blob storage) DB that keeps track of individual users' conversational history
+2. Fine tuning goals - to SingTel specific terminologies (e.g. branding) for better NLU
+3. Human handoff & conversation closing Agents - improved UX
 4. Analytics/reporting dashboard - user metrics, retrieval accuracy, etc.
-5. Authentication & authorisation
-6. Redundancy management - decentralised DB storage
+5. Authentication & authorisation service
+6. Redundancy management - decentralised DB storage for high availability
 7. Embedded UI functionality - toggle buttons for standardised user interactions as much as possible (for common tasks)
 8. Multiple roaming plan availability - current PoC only allows for 1 plan to be active at a time.
 

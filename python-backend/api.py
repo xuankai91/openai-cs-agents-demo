@@ -163,7 +163,8 @@ async def chat_endpoint(req: ChatRequest):
             "context": ctx,
             "current_agent": current_agent_name,
         }
-        if req.message.strip() == "":
+        logger.info(f"new conversation: {conversation_id}")
+        if req.message.strip() == "": #if empty message, save current state (i.e. no change)
             conversation_store.save(conversation_id, state)
             return ChatResponse(
                 conversation_id=conversation_id,
@@ -176,13 +177,15 @@ async def chat_endpoint(req: ChatRequest):
             )
     else:
         conversation_id = req.conversation_id  # type: ignore
-        state = conversation_store.get(conversation_id)
+        state = conversation_store.get(conversation_id) # get existing convo history
+        logger.info(f"existing conversation: {conversation_id}")
 
     current_agent = _get_agent_by_name(state["current_agent"])
-    state["input_items"].append({"content": req.message, "role": "user"})
-    old_context = state["context"].model_dump().copy()
+    state["input_items"].append({"content": req.message, "role": "user"}) # append new user message
+    old_context = state["context"].model_dump().copy() #save existing context (to keep track of changes later)
     guardrail_checks: List[GuardrailCheck] = []
 
+    # now start processing user query
     try:
         result = await Runner.run(current_agent, state["input_items"], context=state["context"])
     except InputGuardrailTripwireTriggered as e:
@@ -191,6 +194,7 @@ async def chat_endpoint(req: ChatRequest):
         gr_reasoning = getattr(gr_output, "reasoning", "")
         gr_input = req.message
         gr_timestamp = time.time() * 1000
+        logger.warning("guardrail tripped")
         for g in current_agent.input_guardrails:
             guardrail_checks.append(GuardrailCheck(
                 id=uuid4().hex,
@@ -216,10 +220,16 @@ async def chat_endpoint(req: ChatRequest):
     events: List[AgentEvent] = []
 
     for item in result.new_items:
+        ## 4 possibilities
+        ## 1. Message output
+        ## 2. Handoff output
+        ## 3. Tool call
+        ## 4. Tool call output
         if isinstance(item, MessageOutputItem):
             text = ItemHelpers.text_message_output(item)
             messages.append(MessageResponse(content=text, agent=item.agent.name))
             events.append(AgentEvent(id=uuid4().hex, type="message", agent=item.agent.name, content=text))
+            logger.info(f"returned message: {text}")
         # Handle handoff output and agent switching
         elif isinstance(item, HandoffOutputItem):
             # Record the handoff event
@@ -235,6 +245,7 @@ async def chat_endpoint(req: ChatRequest):
             # If there is an on_handoff callback defined for this handoff, show it as a tool call
             from_agent = item.source_agent
             to_agent = item.target_agent
+            logger.info(f"handoff: {from_agent} -> {to_agent}")
             # Find the Handoff object on the source agent matching the target
             ho = next(
                 (h for h in getattr(from_agent, "handoffs", [])
@@ -263,6 +274,7 @@ async def chat_endpoint(req: ChatRequest):
             tool_name = getattr(item.raw_item, "name", None)
             raw_args = getattr(item.raw_item, "arguments", None)
             tool_args: Any = raw_args
+            logger.info(f"tool call: {tool_name}")
             if isinstance(raw_args, str):
                 try:
                     import json
@@ -297,6 +309,7 @@ async def chat_endpoint(req: ChatRequest):
                 )
             )
 
+    # check for any changes in the context (from tool use etc.)
     new_context = state["context"].dict()
     changes = {k: new_context[k] for k in new_context if old_context.get(k) != new_context[k]}
     if changes:
@@ -309,6 +322,7 @@ async def chat_endpoint(req: ChatRequest):
                 metadata={"changes": changes},
             )
         )
+        logger.info(f"context updated")
 
     state["input_items"] = result.to_input_list()
     state["current_agent"] = current_agent.name
