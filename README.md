@@ -52,6 +52,15 @@ Replit option
 
 Note: start a new conversation by refreshing your browser page. Do not rerun `run.sh` as it will clear the memory store.
 
+## Functionalities
+This example contains 4 agents:
+1. Customer Service Agent (main). Responsible for getting customer information (name & mobile number), and handing off queries/tasks to other relevant agents.
+2. Roaming Agent. 2 main responsibilities:
+  - Roaming plan recommendation. Will parse a list of country names to match the best available plan (i.e. the smallest plan that covers all travel destinations)
+  - Roaming plan [FAQs](https://www.singtel.com/personal/products-services/mobile/roaming/faqs) lookup. Utilises Retrieval-Augmented Generation (RAG) to help answer user queries about roaming plans factually. 
+3. Purchase Agent. Responsible for purchasing a selected roaming plan, and associating it with a mobile number. Will confirm customer details before proceeding. 
+4. Cancellation Agent. Responsible for cancelling an associated roaming plan. Will confirm customer details before proceeding.
+
 ## Demo Flows
 
 ### Demo flow #1 - Purchasing New Roaming Plan
@@ -126,6 +135,8 @@ This flow demonstrates how, in a new session, the system has persistent memory o
 4. Analytics/reporting dashboard - user metrics, retrieval accuracy, etc.
 5. Authentication & authorisation
 6. Redundancy management - decentralised DB storage
+7. Embedded UI functionality - toggle buttons for standardised user interactions as much as possible (for common tasks)
+8. Multiple roaming plan availability - current PoC only allows for 1 plan to be active at a time.
 
 ## License
 
